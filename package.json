@@ -1,6 +1,6 @@
 {
   "name": "STF_Battery",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "a small app to show the status of the battery and control the brightness of the screen",
   "author": "Toumi Fouad Saadi",
   "main": "main.js",
@@ -11,7 +11,7 @@
   "dependencies": {
     "auto-launch": "^5.0.5",
     "brightness": "^3.0.0",
-    "electron-log": "^4.1.2",
+    "electron-log": "^4.1.1",
     "electron-updater": "^4.3.1"
   },
   "devDependencies": {

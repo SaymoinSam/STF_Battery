@@ -22,13 +22,31 @@
       justify-content: center;
       align-items: center;
     }
+    .desert {
+      background-image: url("background/desert.jpg");
+    }
+    .fire {
+      background-image: url("background/fire.jpg");
+    }
+    .ice {
+      background-image: url("background/ice.jpg");
+    }
+    .paint {
+      background-image: url("background/paint.jpg");
+    }
+    .sky {
+      background-image: url("background/sky.jpg");
+    }
+    .water {
+      background-image: url("background/water.jpg");
+    }
     #window-container {
       width: 300px;
-      height: 200px;
-      border-radius: 10px;
+      height: 200px;      
+      border-radius: 5px;
       overflow: hidden;
-      box-shadow: 2px 2px #333;
-      background-color: gray;
+      box-shadow: 2px 2px #333, -1px -1px cyan;
+      background-size: cover;
     }
     #battery-level-container {
       height: 50px;
@@ -66,7 +84,6 @@
     }
     #brightness-container {
       height: 100px;
-      background-color: lightgray;
     }
     #brightness-buttons-container {
       height: 60px;
@@ -77,13 +94,11 @@
       width: 110px;
     }
     #lower, #higher {
-      cursor: pointer;
       display: inline-block;
       font-size: 40px;
       width: 80px;
       border-radius: 5px;
-      color: #555;
-      outline: none;
+      color: white;
     }
     #brightness-range-container {
       height: 40px;
@@ -92,17 +107,17 @@
       -webkit-appearance: none;
       width: 95%;
       height: 25px;
-      background: #d3d3d3;
-      outline: none;
-      opacity: 0.7;
-      background-color: gray;
-      -webkit-transition: .2s;
-      transition: opacity .2s;
-      cursor: pointer;
       border-radius: 10px;
       border: 2px inset #fff;
     }
-    #brightness-range-container input:hover {
+    #brightness-range-container input, #lower, #higher {
+      outline: none;
+      opacity: 0.7;
+      transition: opacity .2s;
+      cursor: pointer;
+      background-size: cover;
+    }
+    #brightness-range-container input:hover, #lower:hover, #higher:hover {
       opacity: 1;
     }
     #brightness-range-container input::-webkit-slider-thumb {
@@ -111,21 +126,40 @@
       width: 25px;
       height: 30px;
       border-radius: 50%;
-      background-color: white;
+      background-image: url("background/desert.jpg");
+      background-size: cover;
       cursor: pointer;
       border: 2px outset #ccc;
     }
     #time-remaining-container {
-      height: 50px;
+      height: 20px;
     }
     #time-remaining {
       font-size: 14px;
+      color: white;
+    }
+    #themes-container {
+      margin: 10px 0 0 15px;
+      width: 270px;
+      height: 25px;
+      overflow: hidden;
+      border-radius: 10px 10px 0 0;
+      box-shadow: 1px 1px 3px 5px white;
+    }
+    #themes-container img {
+      width: 45px;
+      height: 25px;
+      cursor: pointer;
+    }
+    #themes-container img:hover {
+      width: 60px;
+      height: 40px;
     }
   </style>
 </head>
 <body>
 
-  <div id="window-container">
+  <div id="window-container" class="desert">
     <div id="battery-level-container" class="flex">
       <div id="battery-level-icon" class="flex">
         <div id="battery-icon"></div>
@@ -137,26 +171,35 @@
     <div id="brightness-container">
       <div id="brightness-buttons-container">
         <div id="brightness-lower-button" class="flex">
-          <button id="lower">-</button>
+          <button id="lower" class="desert">-</button>
         </div>
         <div id="brightness-number" class="flex">
           <p id="brightness-value"></p>
         </div>
         <div id="brightness-higher-button" class="flex">
-          <button id="higher">+</button>
+          <button id="higher" class="desert">+</button>
         </div>
       </div>
       <div id="brightness-range-container" class="flex">
-        <input id="brightness-range" type="range" value="50" step="10" min="0" max="100">
+        <input id="brightness-range" class="desert" type="range" value="50" step="10" min="0" max="100">
       </div>
     </div>
     <div id="time-remaining-container" class="flex">
       <p id="time-remaining"></p>
     </div>
+    <div id="themes-container" class="flex">
+      <div><img src="background/desert.jpg" alt="desert"></div>
+      <div><img src="background/fire.jpg" alt="fire"></div>
+      <div><img src="background/ice.jpg" alt="ice"></div>
+      <div><img src="background/paint.jpg" alt="paint"></div>
+      <div><img src="background/sky.jpg" alt="sky"></div>
+      <div><img src="background/water.jpg" alt="water"></div>
+    </div>
   </div>
 
   <script>
     var ipcRenderer = require('electron').ipcRenderer,
+      windowContElement = document.querySelector("#window-container"),
       timeRemElement = document.querySelector("#time-remaining"),
       batteryLevElement = document.querySelector("#battery-level"),
       lowerBut = document.querySelector("#lower"),
@@ -165,6 +208,22 @@
       brightnessValElement = document.querySelector("#brightness-value"),
       batteryIconElement = document.querySelector("#battery-icon"),
       brightnessLevel = 50;
+
+    if(typeof localStorage.currentTheme !== "undefined") {
+      changeBackground(localStorage.currentTheme);
+    }
+
+    document.querySelector("#themes-container").onclick = function(e) {
+      if(e.target.nodeName === "IMG") {
+        changeBackground(e.target.alt);
+      }
+    };
+
+    function changeBackground(backgroundImg) {
+      localStorage.currentTheme = windowContElement.className = backgroundImg;
+      rangeBut.className = higherBut.className = lowerBut.className = backgroundImg;
+      document.styleSheets[0].cssRules[25].style.backgroundImage = `url("background/${backgroundImg}.jpg")`;
+    }
 
     // when the level of brightness is delivered by the main js
     // change the statistics of the window
