@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+  <meta charset="utf-8">
+  <title>STF Battery</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      user-select: none;
+    }
+    html, body {
+      background-color: transparent;
+      font-family: monospace;
+      font-weight: bold;
+      color: white;
+      width: 100%;
+      height: 100%;
+      padding: 0;
+      margin: 0;
+    }
+    p {
+      margin: 0;
+    }
+    .flex {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    #window-container {
+      width: 270px;
+      height: 60px;
+      border-radius: 5px;
+      overflow: hidden;
+      box-shadow: 2px 2px #333;
+      background-color: lightgray;
+      position: relative;
+    }
+    .container {
+      width: 100%;
+      height: 30px;
+      display: flex;
+      flex-wrap: wrap;
+    }
+    #icon {
+      width: 30px;
+      height: 30px;
+    }
+    #title {
+      height: 30px;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      padding-left: 10px;
+    }
+    #progress-container {
+      width: 80%;
+      height: 30px;
+      position: relative;
+    }
+    #percent {
+      font-size: 20px;
+      height: 26px;
+      width: 20%;
+    }
+    #progress {
+      width: 0px;
+      background-color: white;
+      height: 15px;
+      border-radius: 3px;
+      position: absolute;
+      left: 10px;
+      top: 7px;
+    }
+    #progress::before {
+      content: "";
+      position: absolute;
+      top: -4px;
+      left: -4px;
+      width: 204px;
+      height: 19px;
+      border: 2px solid white;
+      border-radius: 5px;
+    }
+    #minimize-button {
+      position: absolute;
+      top: 15px;
+      right: 7px;
+      background-color: white;
+      width: 16px;
+      height: 4px;
+      border-radius: 3px;
+    }
+    #minimize-button::before {
+      content: "";
+      position: absolute;
+      top: -10px;
+      left: -4px;
+      border: 2px solid white;
+      width: 20px;
+      height: 16px;
+      border-radius: 2px;
+      cursor: pointer;
+    }
+    #minimize-button:hover {
+      box-shadow: 2px 2px 3px #fff;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="window-container">
+    <div class="container" style="background-color: gray">
+      <div id="icon" class="flex">
+        <img src="build/icon.ico" width="24" height="24">
+      </div>
+      <div id="title">STF Battery Updater</div>
+    </div>
+    <div class="container">
+      <div id="progress-container">
+        <div id="progress"></div>
+      </div>
+      <div id="percent" class="flex">00%</div>
+    </div>
+    <div id="minimize-button"></div>
+  </div>
+
+  <script>
+    var ipcRenderer = require('electron').ipcRenderer,
+      progressElement = document.querySelector("#progress"),
+      percentElement = document.querySelector("#percent");
+
+    ipcRenderer.on("update-progress", function(event, val) {
+      val = Math.floor(val);
+      progressElement.style.width = val * 2 + "px";
+      percentElement.innerHTML = (val < 10 ? "0" + val : val) + "%";
+    });
+
+    document.querySelector("#minimize-button").onclick = function() {
+      ipcRenderer.send("minimize-update-win", "");
+    };
+  </script>
+</body>
+</html>

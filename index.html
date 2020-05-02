@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+  <meta charset="utf-8">
+  <title>STF Battery</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      user-select: none;
+    }
+    body {
+      background-color: transparent;
+      font-family: monospace;
+      font-weight: bold;
+      color: white;
+    }
+    p {
+      margin: 0;
+    }
+    .flex {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    #window-container {
+      width: 300px;
+      height: 200px;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 2px 2px #333;
+      background-color: gray;
+    }
+    #battery-level-container {
+      height: 50px;
+    }
+    #battery-level-icon {
+      width: 220px;
+      height: 50px;
+      position: relative;
+    }
+    #battery-level, #brightness-number {
+      width: 80px;
+      font-size: 35px;
+    }
+    #battery-level {
+      font-size: 30px;
+    }
+    #battery-icon {
+      width: 100px;
+      background-color: white;
+      height: 30px;
+      border-radius: 3px;
+      position: absolute;
+      left: 10px;
+      top: 10px;
+    }
+    #battery-icon::before {
+      content: "";
+      position: absolute;
+      top: -4px;
+      left: -4px;
+      width: 204px;
+      height: 34px;
+      border: 2px solid white;
+      border-radius: 5px;
+    }
+    #brightness-container {
+      height: 100px;
+      background-color: lightgray;
+    }
+    #brightness-buttons-container {
+      height: 60px;
+      width: 100%;
+      display: flex;
+    }
+    #brightness-lower-button, #brightness-higher-button {
+      width: 110px;
+    }
+    #lower, #higher {
+      cursor: pointer;
+      display: inline-block;
+      font-size: 40px;
+      width: 80px;
+      border-radius: 5px;
+      color: #555;
+      outline: none;
+    }
+    #brightness-range-container {
+      height: 40px;
+    }
+    #brightness-range-container input {
+      -webkit-appearance: none;
+      width: 95%;
+      height: 25px;
+      background: #d3d3d3;
+      outline: none;
+      opacity: 0.7;
+      background-color: gray;
+      -webkit-transition: .2s;
+      transition: opacity .2s;
+      cursor: pointer;
+      border-radius: 10px;
+      border: 2px inset #fff;
+    }
+    #brightness-range-container input:hover {
+      opacity: 1;
+    }
+    #brightness-range-container input::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 25px;
+      height: 30px;
+      border-radius: 50%;
+      background-color: white;
+      cursor: pointer;
+      border: 2px outset #ccc;
+    }
+    #time-remaining-container {
+      height: 50px;
+    }
+    #time-remaining {
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="window-container">
+    <div id="battery-level-container" class="flex">
+      <div id="battery-level-icon" class="flex">
+        <div id="battery-icon"></div>
+      </div>
+      <div id="battery-level-number">
+        <p id="battery-level" class="flex"></p>
+      </div>
+    </div>
+    <div id="brightness-container">
+      <div id="brightness-buttons-container">
+        <div id="brightness-lower-button" class="flex">
+          <button id="lower">-</button>
+        </div>
+        <div id="brightness-number" class="flex">
+          <p id="brightness-value"></p>
+        </div>
+        <div id="brightness-higher-button" class="flex">
+          <button id="higher">+</button>
+        </div>
+      </div>
+      <div id="brightness-range-container" class="flex">
+        <input id="brightness-range" type="range" value="50" step="10" min="0" max="100">
+      </div>
+    </div>
+    <div id="time-remaining-container" class="flex">
+      <p id="time-remaining"></p>
+    </div>
+  </div>
+
+  <script>
+    var ipcRenderer = require('electron').ipcRenderer,
+      timeRemElement = document.querySelector("#time-remaining"),
+      batteryLevElement = document.querySelector("#battery-level"),
+      lowerBut = document.querySelector("#lower"),
+      higherBut = document.querySelector("#higher"),
+      rangeBut = document.querySelector("#brightness-range"),
+      brightnessValElement = document.querySelector("#brightness-value"),
+      batteryIconElement = document.querySelector("#battery-icon"),
+      brightnessLevel = 50;
+
+    // when the level of brightness is delivered by the main js
+    // change the statistics of the window
+    ipcRenderer.on("brightness-grab", function(event, val) {
+      brightnessLevel = Number(val);
+      rangeBut.value = val - val % 10;
+      brightnessValElement.innerHTML = val + "%";
+    });
+
+    // create the time remaining string from a number of remaining seconds for discharging
+    function toTimeString(seconds) {
+      var hours = Math.floor(seconds / 3600),
+        minutes = Math.floor(seconds % 3600 / 60);
+        
+      return (hours > 0 ? hours + " hour(s) " : "") + (minutes < 10 ? "0" + minutes : minutes) + " minute(s) remaining";
+    }
+
+    function handleBatteryEvent(battery, sendIt) {
+      if(battery.dischargingTime != Infinity) {
+        timeRemElement.innerHTML = toTimeString(battery.dischargingTime);
+      }else if(!battery.charging) {
+        timeRemElement.innerHTML = "";
+      }else {
+        timeRemElement.innerHTML = "currently charging";
+      }
+
+      batteryLevElement.innerHTML = Math.floor(battery.level * 100) + (battery.level * 100 < 10 ? "0" : "") + "%";
+      batteryIconElement.style.width = Math.floor(battery.level * 200) + "px";
+
+      if(sendIt) {
+        ipcRenderer.send("battery-event", {
+          isCharging: battery.charging, 
+          level: battery.level
+        });
+      }
+    }
+
+    rangeBut.onchange = function() {
+      ipcRenderer.send("brightness-set", this.value);
+      brightnessLevel = Number(this.value);
+      brightnessValElement.innerHTML = this.value + "%";
+    }
+
+    lowerBut.onclick = function() {
+      if(brightnessLevel > 0) {
+        if(brightnessLevel % 10 !== 0) {
+          brightnessLevel -= brightnessLevel % 10;
+        }else {
+          brightnessLevel -= 10;
+        }
+        ipcRenderer.send("brightness-set", brightnessLevel);
+      }
+      rangeBut.value = brightnessLevel;
+      brightnessValElement.innerHTML = brightnessLevel + "%";
+    }
+
+    higherBut.onclick = function() {
+      if(brightnessLevel < 100) {
+        if(brightnessLevel % 10 !== 0) {
+          brightnessLevel += 10 - brightnessLevel % 10;
+        }else {
+          brightnessLevel += 10;
+        }
+        ipcRenderer.send("brightness-set", brightnessLevel);
+      }
+      rangeBut.value = brightnessLevel;
+      brightnessValElement.innerHTML = brightnessLevel + "%";
+    }
+
+    navigator.getBattery().then(function(battery) {
+      ipcRenderer.send("brightness-get", battery.charging);
+
+      ipcRenderer.on("battery-ischarging", function() {
+        ipcRenderer.send("brightness-get", battery.charging);
+      });
+
+      handleBatteryEvent(battery, true);
+
+      battery.onlevelchange = function () {
+        handleBatteryEvent(battery, true);
+      };
+
+      battery.onchargingchange = function () {
+        ipcRenderer.send("brightness-get", battery.charging);
+        handleBatteryEvent(battery, true);
+      };
+
+      battery.ondischargingtimechange = function () {
+        handleBatteryEvent(battery, false);
+      };
+    });
+  </script>
+</body>
+</html>

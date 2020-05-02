@@ -1,0 +1,45 @@
+{
+  "name": "STF_Battery",
+  "version": "1.0.0",
+  "description": "a small app to show the status of the battery and control the brightness of the screen",
+  "author": "Toumi Fouad Saadi",
+  "main": "main.js",
+  "scripts": {
+    "test": "electron ."
+  },
+  "license": "ISC",
+  "dependencies": {
+    "auto-launch": "^5.0.5",
+    "brightness": "^3.0.0",
+    "electron-log": "^4.1.2",
+    "electron-updater": "^4.3.1"
+  },
+  "devDependencies": {
+    "electron": "8.2.3"
+  },
+  "build": {
+    "productName": "STF Battery",
+    "nsis": {
+      "createDesktopShortcut": false,
+      "createStartMenuShortcut": false,
+      "menuCategory": false,
+      "oneClick": false,
+      "perMachine": true,
+      "allowToChangeInstallationDirectory": true,
+      "shortcutName": "STF Battery",
+      "installerIcon": "icon.ico",
+      "uninstallerIcon": "uninstall_icon.ico",
+      "installerHeader": "install_header.bmp",
+      "installerSidebar": "welcome_header.bmp",
+      "uninstallerSidebar": "unwelcome_header.bmp",
+      "license": "license.txt"
+    },
+    "win": {
+      "target": "nsis",
+      "icon": "icon.ico",
+      "publish": [
+        "github"
+      ]
+    }
+  }
+}
